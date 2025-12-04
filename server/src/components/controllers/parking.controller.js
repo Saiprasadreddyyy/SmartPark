@@ -175,6 +175,13 @@ export {
   getAllSlots,
   getStatsEndpoint as getStats
 };
+
+
+
+
+
+
+
 // import Parking from "../models/parking.model.js";
 // import { allocateSlot } from "../services/allocateSlot.service.js";
 // import { releaseSlot } from "../services/releaseSlot.service.js";

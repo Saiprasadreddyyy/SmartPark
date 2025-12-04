@@ -3,6 +3,8 @@ import app from './app.js';
 import connectDB from './config/mongodb.js';
 import { initializeSocketIO } from './components/sockets/parking.socket.js';
 import { seedParking } from './data/seedParking.js';
+import dotenv from "dotenv";
+
 
 const PORT = process.env.PORT || 5050;
 
@@ -19,7 +21,8 @@ const startServer = async () => {
     
     // Seed parking data on startup
     await seedParking();
-    
+    dotenv.config();
+
     // Start server
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
