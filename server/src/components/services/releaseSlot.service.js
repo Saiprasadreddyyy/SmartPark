@@ -1,6 +1,7 @@
 import SlotModel from '../models/slot.model.js';
 import TicketModel from '../models/ticket.model.js';
 import { addSlotToAvailability } from './redisAvailability.service.js';
+import { generateBill } from './billing.service.js';
 
 async function releaseSlot(ticketId) {
   // Validate ticket exists
@@ -15,6 +16,9 @@ async function releaseSlot(ticketId) {
   if (!slot) {
     throw new Error(`Slot ${slotId} not found`);
   }
+
+  // Generate bill BEFORE releasing slot
+  const billingResult = await generateBill(ticketId);
 
   // Update ticket status
   ticket.status = 'completed';
@@ -48,42 +52,9 @@ async function releaseSlot(ticketId) {
       timestamp: ticket.timestamp,
       exitTime: ticket.exitTime
     },
-    message: `Vehicle ${ticket.vehicleNumber} exited successfully`
+    bill: billingResult.bill,
+    message: `Vehicle ${ticket.vehicleNumber} exited successfully. ${billingResult.message}`
   };
 }
 
 export { releaseSlot };
-// import Parking from "../models/parking.model.js";
-// import { addSlotToAvailability } from "./redisAvailability.service.js";
-
-// async function releaseSlot(ticketId) {
-//   // Validate ticket exists
-//   const ticket = Parking.getTicket(ticketId);
-//   if (!ticket) {
-//     throw new Error(`Ticket ${ticketId} not found`);
-//   }
-
-//   const slotId = ticket.slotId;
-//   const slot = Parking.getSlot(slotId);
-
-//   if (!slot) {
-//     throw new Error(`Slot ${slotId} not found`);
-//   }
-
-//   // Release slot
-//   Parking.releaseSlot(slotId);
-
-//   // Remove ticket
-//   Parking.removeTicket(ticketId);
-
-//   // Add slot back to Redis availability
-//   await addSlotToAvailability(slotId);
-
-//   return {
-//     slot: slot.toJSON(),
-//     ticket: ticket,
-//     message: `Vehicle ${ticket.vehicleNumber} exited successfully`
-//   };
-// }
-
-// export { releaseSlot };

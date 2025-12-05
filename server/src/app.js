@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import parkingRoutes from "./components/routes/parking.routes.js";
+import billingRoutes from "./components/routes/billing.routes.js";
+
 
 const app = express();
 
@@ -11,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Use parking routes with /api prefix
 app.use("/api/parking", parkingRoutes);
+app.use("/api/billing", billingRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

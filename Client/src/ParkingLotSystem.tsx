@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Car, Bike, Truck } from "lucide-react";
+import PaymentModal from "./components/PaymentModal";
 
 // Backend URL
 const API_BASE = "http://localhost:5050/api/parking";
@@ -43,6 +44,10 @@ const ParkingLotSystem: React.FC = () => {
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Billing states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentBill, setCurrentBill] = useState<any>(null);
 
   // Fetch slots and vehicles on load
   useEffect(() => {
@@ -143,7 +148,7 @@ const ParkingLotSystem: React.FC = () => {
     setLoading(false);
   };
 
-  /** Exit a vehicle */
+  /** Exit a vehicle with billing */
   const handleExitVehicle = async (ticketId: string) => {
     try {
       console.log("🚪 Exit request for ticket:", ticketId);
@@ -156,17 +161,44 @@ const ParkingLotSystem: React.FC = () => {
         return;
       }
 
-      setMessage(`✅ ${response.data.message}`);
-      
-      // Refresh data immediately
-      await fetchSlots();
-      await fetchParkedVehicles();
+      // Check if bill was generated
+      if (response.data.data && response.data.data.bill) {
+        // Show payment modal with bill
+        setCurrentBill(response.data.data.bill);
+        setShowPaymentModal(true);
+      } else {
+        // Fallback if no bill (shouldn't happen with new system)
+        setMessage(`✅ ${response.data.message}`);
+        await fetchSlots();
+        await fetchParkedVehicles();
+      }
       
     } catch (err: any) {
       console.error("❌ Error exiting vehicle:", err);
       const errorMsg = err.response?.data?.error || err.message;
       setMessage(`❌ Error: ${errorMsg}`);
     }
+  };
+
+  /** Handle payment completion */
+  const handlePaymentSuccess = async (paidBill: any) => {
+    setMessage(`✅ Payment successful! Vehicle ${paidBill.vehicleNumber} exited. Total: ₹${paidBill.totalAmount}`);
+    setShowPaymentModal(false);
+    setCurrentBill(null);
+    
+    // Refresh data
+    await fetchSlots();
+    await fetchParkedVehicles();
+  };
+
+  /** Handle payment modal close */
+  const handlePaymentModalClose = async () => {
+    setShowPaymentModal(false);
+    setCurrentBill(null);
+    
+    // Refresh data even if payment was cancelled
+    await fetchSlots();
+    await fetchParkedVehicles();
   };
 
   /** Slot color based on occupancy */
@@ -221,7 +253,9 @@ const ParkingLotSystem: React.FC = () => {
         {/* Message */}
         {message && (
           <div className={`mb-4 p-3 rounded ${
-            message.includes('❌') ? 'bg-red-600' : 'bg-blue-600'
+            message.includes('❌') ? 'bg-red-600' : 
+            message.includes('✅') && message.includes('Payment') ? 'bg-green-600' :
+            'bg-blue-600'
           } text-white`}>
             {message}
           </div>
@@ -278,6 +312,23 @@ const ParkingLotSystem: React.FC = () => {
           >
             {loading ? "Parking..." : "Park Vehicle"}
           </button>
+          
+          {/* Pricing Info */}
+          <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
+            <h3 className="text-sm font-semibold text-green-400 mb-2">💰 Parking Rates (per hour):</h3>
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="text-gray-300">
+                <span className="text-green-400">🚗</span> Car: <strong className="text-white">₹40</strong>
+              </div>
+              <div className="text-gray-300">
+                <span className="text-green-400">🏍️</span> Bike: <strong className="text-white">₹30</strong>
+              </div>
+              <div className="text-gray-300">
+                <span className="text-green-400">🚛</span> Large: <strong className="text-white">₹60</strong>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">* GST (18%) applicable. Minimum charge: 1 hour</p>
+          </div>
         </div>
 
         {/* Parked Vehicles */}
@@ -292,7 +343,7 @@ const ParkingLotSystem: React.FC = () => {
               {parkedVehicles.map((v) => (
                 <div
                   key={v.id}
-                  className="bg-gray-700 p-4 rounded flex justify-between items-center"
+                  className="bg-gray-700 p-4 rounded flex justify-between items-center hover:bg-gray-600 transition-all"
                 >
                   <div className="flex-1">
                     <div className="text-white font-bold text-lg">{v.vehicleNumber}</div>
@@ -311,9 +362,9 @@ const ParkingLotSystem: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleExitVehicle(v.id)}
-                    className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-500 ml-2"
+                    className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-500 ml-2 font-semibold transition-all"
                   >
-                    Exit
+                    Exit & Pay
                   </button>
                 </div>
               ))}
@@ -339,7 +390,7 @@ const ParkingLotSystem: React.FC = () => {
                       key={slot.id}
                       className={`p-4 rounded flex items-center justify-between ${getSlotColor(
                         slot
-                      )} text-white transition-all`}
+                      )} text-white transition-all hover:scale-105`}
                     >
                       <div className="flex items-center gap-2">
                         {getVehicleIcon(slot.type)}
@@ -362,7 +413,7 @@ const ParkingLotSystem: React.FC = () => {
                       key={slot.id}
                       className={`p-4 rounded flex items-center justify-between ${getSlotColor(
                         slot
-                      )} text-white transition-all`}
+                      )} text-white transition-all hover:scale-105`}
                     >
                       <div className="flex items-center gap-2">
                         {getVehicleIcon(slot.type)}
@@ -379,278 +430,17 @@ const ParkingLotSystem: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && currentBill && (
+        <PaymentModal
+          bill={currentBill}
+          onClose={handlePaymentModalClose}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 };
 
 export default ParkingLotSystem;
-
-// // src/ParkingLotSystem.tsx
-// import React, { useState, useEffect } from "react";
-// import axios from "axios";
-// import { Car, Bike, Truck } from "lucide-react";
-
-// // Backend URL
-// const API_BASE = "http://localhost:5050/api/parking";
-
-// // Type definitions
-// interface Slot {
-//   id: string;
-//   type: "car" | "motorbike" | "large";
-//   occupied: boolean;
-//   currentTicket: string | null;
-// }
-
-// interface Vehicle {
-//   ticketId: string;
-//   slotId: string;
-//   vehicleType: "car" | "motorbike" | "large";
-//   vehicleNumber: string;
-//   owner: string;
-//   gateId: string;
-//   timestamp: string;
-// }
-
-// interface FormData {
-//   gateId: "gateA" | "gateB";
-//   vehicleType: "car" | "motorbike" | "large";
-//   vehicleNumber: string;
-//   owner: string;
-// }
-
-// const ParkingLotSystem: React.FC = () => {
-//   const [slots, setSlots] = useState<Slot[]>([]);
-//   const [parkedVehicles, setParkedVehicles] = useState<Vehicle[]>([]);
-//   const [formData, setFormData] = useState<FormData>({
-//     gateId: "gateA",
-//     vehicleType: "car",
-//     vehicleNumber: "",
-//     owner: "",
-//   });
-//   const [message, setMessage] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   // Fetch slots and vehicles on load
-//   useEffect(() => {
-//     fetchSlots();
-//     fetchParkedVehicles();
-//   }, []);
-
-//   /** Fetch all slots */
-//   const fetchSlots = async () => {
-//     try {
-//       const { data } = await axios.get(`${API_BASE}/slots`);
-//       setSlots(data.data); // backend wraps array in data.data
-//     } catch (err: any) {
-//       console.error("Error fetching slots:", err.message);
-//       setMessage("Failed to fetch slots");
-//     }
-//   };
-
-//   /** Fetch all parked vehicles */
-//   const fetchParkedVehicles = async () => {
-//     try {
-//       const { data } = await axios.get(`${API_BASE}/vehicles`);
-//       setParkedVehicles(data.data);
-//     } catch (err: any) {
-//       console.error("Error fetching vehicles:", err.message);
-//       setMessage("Failed to fetch parked vehicles");
-//     }
-//   };
-
-//   /** Park a vehicle */
-//   const handleParkVehicle = async () => {
-//     if (!formData.vehicleNumber || !formData.owner) {
-//       setMessage("Please fill all fields");
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const { data } = await axios.post(`${API_BASE}/park`, formData);
-
-//       if (!data.success) {
-//         setMessage(data.message || "Failed to park vehicle");
-//         setLoading(false);
-//         return;
-//       }
-
-//       const parked = data.data; // vehicle object
-//       setParkedVehicles((prev) => [...prev, parked]);
-//       setSlots((prev) =>
-//         prev.map((slot) =>
-//           slot.id === parked.slotId
-//             ? { ...slot, occupied: true, currentTicket: parked.ticketId }
-//             : slot
-//         )
-//       );
-
-//       setMessage(`✅ Vehicle parked at ${parked.slotId}`);
-//       setFormData({ ...formData, vehicleNumber: "", owner: "" });
-//     } catch (err: any) {
-//       console.error("Error parking vehicle:", err.message);
-//       setMessage("Error parking vehicle");
-//     }
-//     setLoading(false);
-//   };
-
-//   /** Exit a vehicle */
-//   const handleExitVehicle = async (ticketId: string) => {
-//     try {
-//       const { data } = await axios.post(`${API_BASE}/release`, { ticketId });
-
-//       if (!data.success || !data.data?.slotId) return;
-
-//       const slotId = data.data.slotId;
-//       setParkedVehicles((prev) => prev.filter((v) => v.ticketId !== ticketId));
-//       setSlots((prev) =>
-//         prev.map((slot) =>
-//           slot.id === slotId
-//             ? { ...slot, occupied: false, currentTicket: null }
-//             : slot
-//         )
-//       );
-
-//       setMessage(`✅ Vehicle exited from ${slotId}`);
-//     } catch (err: any) {
-//       console.error("Error exiting vehicle:", err.message);
-//       setMessage("Error exiting vehicle");
-//     }
-//   };
-
-//   /** Slot color based on occupancy */
-//   const getSlotColor = (slot: Slot) =>
-//     slot.occupied ? "bg-red-500" : "bg-green-500";
-
-//   /** Vehicle icon based on type */
-//   const getVehicleIcon = (type: Slot["type"]) => {
-//     switch (type) {
-//       case "car":
-//         return <Car size={16} />;
-//       case "motorbike":
-//         return <Bike size={16} />;
-//       case "large":
-//         return <Truck size={16} />;
-//       default:
-//         return <Car size={16} />;
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-900 p-8">
-//       <div className="max-w-7xl mx-auto">
-//         <h1 className="text-4xl font-bold text-center mb-8 text-white">
-//           🚗 Smart Parking Lot
-//         </h1>
-
-//         {/* Message */}
-//         {message && (
-//           <div className="mb-4 p-3 bg-blue-600 text-white rounded">{message}</div>
-//         )}
-
-//         {/* Park Vehicle Form */}
-//         <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
-//           <h2 className="text-2xl mb-4 text-white">Park a Vehicle</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             <select
-//               value={formData.gateId}
-//               onChange={(e) =>
-//                 setFormData({ ...formData, gateId: e.target.value as any })
-//               }
-//               className="p-2 rounded bg-gray-700 text-white"
-//             >
-//               <option value="gateA">Gate A</option>
-//               <option value="gateB">Gate B</option>
-//             </select>
-//             <select
-//               value={formData.vehicleType}
-//               onChange={(e) =>
-//                 setFormData({ ...formData, vehicleType: e.target.value as any })
-//               }
-//               className="p-2 rounded bg-gray-700 text-white"
-//             >
-//               <option value="car">Car</option>
-//               <option value="motorbike">Motorbike</option>
-//               <option value="large">Truck / Large</option>
-//             </select>
-//             <input
-//               type="text"
-//               placeholder="Vehicle Number"
-//               value={formData.vehicleNumber}
-//               onChange={(e) =>
-//                 setFormData({ ...formData, vehicleNumber: e.target.value })
-//               }
-//               className="p-2 rounded bg-gray-700 text-white"
-//             />
-//             <input
-//               type="text"
-//               placeholder="Owner Name"
-//               value={formData.owner}
-//               onChange={(e) =>
-//                 setFormData({ ...formData, owner: e.target.value })
-//               }
-//               className="p-2 rounded bg-gray-700 text-white"
-//             />
-//           </div>
-//           <button
-//             onClick={handleParkVehicle}
-//             disabled={loading}
-//             className="mt-4 bg-green-600 text-white p-2 rounded hover:bg-green-500"
-//           >
-//             {loading ? "Parking..." : "Park Vehicle"}
-//           </button>
-//         </div>
-
-//         {/* Parked Vehicles */}
-//         <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
-//           <h2 className="text-2xl mb-4 text-white">Parked Vehicles</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-//             {parkedVehicles.map((v) => (
-//               <div
-//                 key={v.ticketId}
-//                 className="bg-gray-700 p-4 rounded flex justify-between items-center"
-//               >
-//                 <div>
-//                   <div className="text-white font-bold">{v.vehicleNumber}</div>
-//                   <div className="text-gray-300 text-sm">{v.owner}</div>
-//                   <div className="text-gray-300 text-sm">
-//                     Slot: {v.slotId} | Gate: {v.gateId}
-//                   </div>
-//                 </div>
-//                 <button
-//                   onClick={() => handleExitVehicle(v.ticketId)}
-//                   className="bg-red-600 text-white p-1 rounded hover:bg-red-500"
-//                 >
-//                   Exit
-//                 </button>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Parking Slot Status */}
-//         <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-//           <h2 className="text-2xl mb-4 text-white">Parking Slots</h2>
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//             {slots.map((slot) => (
-//               <div
-//                 key={slot.id}
-//                 className={`p-4 rounded flex items-center justify-between ${getSlotColor(
-//                   slot
-//                 )} text-white`}
-//               >
-//                 <div className="flex items-center gap-2">
-//                   {getVehicleIcon(slot.type)}
-//                   <span>{slot.id}</span>
-//                 </div>
-//                 <span>{slot.occupied ? "Occupied" : "Free"}</span>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ParkingLotSystem;

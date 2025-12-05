@@ -1,14 +1,3 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Optional: global body styles */
-/* body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: #1f2937; /* gray-900 */
-
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 * {
