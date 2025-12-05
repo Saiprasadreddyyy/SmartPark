@@ -7,7 +7,7 @@
 }
 
 :root {
-  /* Custom Color Palette */
+
   --primary-green: #6D9778;
   --dark-green: #0C3B2E;
   --bg-dark: #0a0e0d;
@@ -43,7 +43,7 @@ code {
   min-height: 100vh;
 }
 
-/* Scrollbar Styling */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -62,13 +62,13 @@ code {
   background: var(--dark-green);
 }
 
-/* Selection */
+
 ::selection {
   background: var(--primary-green);
   color: white;
 }
 
-/* Animations */
+
 @keyframes fadeIn {
   from {
     opacity: 0;

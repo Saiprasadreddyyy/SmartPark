@@ -1,13 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import SlotModel from '../models/slot.model.js';
 import TicketModel from '../models/ticket.model.js';
-import { 
-  getNearestSlot, 
-  removeSlotFromAvailability 
-} from './redisAvailability.service.js';
+import { getNearestSlot, removeSlotFromAvailability } from './redisAvailability.service.js';
 
 async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
-  // Validate input
+
   if (!gateId || !vehicleType || !vehicleNumber || !owner) {
     throw new Error('Missing required fields');
   }
@@ -16,7 +13,7 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
     throw new Error(`Invalid gate: ${gateId}`);
   }
 
-  // Get nearest available slot from Redis
+
   const result = await getNearestSlot(gateId, vehicleType);
   
   if (!result) {
@@ -25,7 +22,7 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
 
   const { slotId, distance } = result;
   
-  // Validate slot exists and is available in MongoDB
+
   const slot = await SlotModel.findOne({ id: slotId });
   if (!slot) {
     throw new Error(`Slot ${slotId} not found`);
@@ -35,7 +32,7 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
     throw new Error(`Slot ${slotId} is already occupied`);
   }
 
-  // Create ticket
+
   const ticketId = uuidv4();
   const ticket = new TicketModel({
     id: ticketId,
@@ -48,15 +45,15 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
     status: 'active'
   });
 
-  // Save ticket to MongoDB
+
   await ticket.save();
   
-  // Update slot as occupied
+
   slot.occupied = true;
   slot.currentTicket = ticketId;
   await slot.save();
   
-  // Remove from all Redis availability sets
+
   await removeSlotFromAvailability(slotId);
 
   return {

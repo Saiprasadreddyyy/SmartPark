@@ -38,7 +38,7 @@
   margin-right: auto;
 }
 
-/* Typography */
+
 .text-4xl {
   font-size: 2.5rem;
   line-height: 1.2;
@@ -69,7 +69,7 @@
   text-align: center;
 }
 
-/* Heading with gradient effect */
+
 h1.text-4xl {
   background: linear-gradient(135deg, #ffffff 0%, #6D9778 100%);
   -webkit-background-clip: text;
@@ -99,7 +99,7 @@ h2.text-2xl::before {
   border-radius: 2px;
 }
 
-/* Cards */
+
 .bg-gray-800 {
   background: rgba(15, 23, 19, 0.8);
   backdrop-filter: blur(10px);
@@ -146,7 +146,7 @@ h2.text-2xl::before {
   padding: 0.25rem;
 }
 
-/* Message Banner */
+
 .mb-4.p-3.bg-blue-600 {
   background: linear-gradient(135deg, #6D9778 0%, #0C3B2E 100%);
   color: white;
@@ -158,7 +158,7 @@ h2.text-2xl::before {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Grid Layouts */
+
 .grid {
   display: grid;
 }
@@ -186,7 +186,7 @@ h2.text-2xl::before {
   }
 }
 
-/* Form Elements */
+
 select,
 input[type="text"] {
   width: 100%;
@@ -216,7 +216,7 @@ input[type="text"]::placeholder {
   color: #6b8f7a;
 }
 
-/* Buttons */
+
 button {
   font-weight: 600;
   border-radius: 0.5rem;
@@ -271,7 +271,7 @@ button {
   background: #c82333;
 }
 
-/* Parked Vehicles Cards */
+
 .bg-gray-700 {
   background: rgba(12, 59, 46, 0.4);
   border: 1px solid rgba(109, 151, 120, 0.2);
@@ -304,7 +304,7 @@ button {
   gap: 0.5rem;
 }
 
-/* Parking Slots */
+
 .bg-red-500 {
   background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   border: 1px solid rgba(220, 53, 69, 0.5);
@@ -319,7 +319,7 @@ button {
   border-radius: 0.5rem;
 }
 
-/* Slot cards styling */
+
 .bg-red-500,
 .bg-green-500 {
   padding: 1.25rem;
@@ -353,12 +353,12 @@ button {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* Utility Classes */
+
 .mt-4 {
   margin-top: 1rem;
 }
 
-/* Loading Animation */
+
 button:disabled {
   position: relative;
   overflow: hidden;
@@ -375,7 +375,7 @@ button:disabled::after {
   animation: shimmer 1.5s infinite;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .p-8 {
     padding: 1rem;
@@ -394,14 +394,14 @@ button:disabled::after {
   }
 }
 
-/* Smooth transitions for all interactive elements */
+
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-/* Add entrance animations */
+
 .grid > * {
   animation: fadeIn 0.5s ease-out backwards;
 }
@@ -413,12 +413,12 @@ button:disabled::after {
 .grid > *:nth-child(5) { animation-delay: 0.25s; }
 .grid > *:nth-child(6) { animation-delay: 0.3s; }
 
-/* Custom glow effect for active slots */
+
 .bg-red-500 {
   animation: pulse 2s infinite;
 }
 
-/* Empty state styling */
+
 .grid:empty::after {
   content: 'No vehicles parked yet';
   display: block;

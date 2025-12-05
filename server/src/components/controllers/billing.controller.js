@@ -6,9 +6,7 @@ import {
     getRevenueStats
   } from '../services/billing.service.js';
   
-  /**
-   * Generate bill for exit
-   */
+
   async function generateBillController(req, res) {
     try {
       const { ticketId } = req.body;
@@ -36,9 +34,7 @@ import {
     }
   }
   
-  /**
-   * Process payment
-   */
+  
   async function processPaymentController(req, res) {
     try {
       const { billId, paymentMethod } = req.body;
@@ -66,9 +62,7 @@ import {
     }
   }
   
-  /**
-   * Get bill by ticket
-   */
+  
   async function getBillController(req, res) {
     try {
       const { ticketId } = req.params;
@@ -95,9 +89,7 @@ import {
     }
   }
   
-  /**
-   * Get all bills
-   */
+  
   async function getAllBillsController(req, res) {
     try {
       const {
@@ -134,9 +126,7 @@ import {
     }
   }
   
-  /**
-   * Get revenue statistics
-   */
+  
   async function getRevenueStatsController(req, res) {
     try {
       const { startDate, endDate } = req.query;

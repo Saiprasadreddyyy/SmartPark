@@ -5,10 +5,10 @@ class Parking {
       gateB: { id: "gateB", coords: { x: 400, y: 0 } }
     };
 
-    this.floors = []; // Array of floors with slots
-    this.slots = {}; // Map of slotId -> Slot object
-    this.tickets = {}; // Map of ticketId -> Ticket object
-    this.distances = {}; // Map of slotId -> { gateId: distance }
+    this.floors = []; 
+    this.slots = {};
+    this.tickets = {}; 
+    this.distances = {}; 
   }
 
   reset() {
@@ -98,8 +98,8 @@ class Parking {
   }
 }
 
-// Singleton instance
+
 const parkingInstance = new Parking();
 
-// Export default for consistent importing
+
 export default parkingInstance;

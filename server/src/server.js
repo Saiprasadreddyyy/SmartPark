@@ -9,20 +9,15 @@ const PORT = process.env.PORT || 5050;
 
 const server = http.createServer(app);
 
-// Initialize Socket.IO
 initializeSocketIO(server);
 
-// Connect to MongoDB and start server
 const startServer = async () => {
   try {
-    // Connect to MongoDB
     await connectDB();
     
-    // Seed parking data on startup
     await seedParking();
     dotenv.config();
 
-    // Start server
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Socket.IO enabled for real-time updates`);

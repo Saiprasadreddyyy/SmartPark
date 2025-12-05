@@ -2,19 +2,17 @@ import { v4 as uuidv4 } from 'uuid';
 import BillingModel from '../models/billing.schema.js';
 import TicketModel from '../models/ticket.model.js';
 
-// Parking rates per hour
+
 const PARKING_RATES = {
   car: 40,
   motorbike: 30,
   large: 60
 };
 
-// Tax percentage (GST)
-const TAX_RATE = 0.18; // 18%
 
-/**
- * Calculate parking duration
- */
+const TAX_RATE = 0.18; 
+
+
 function calculateDuration(entryTime, exitTime) {
   const entry = new Date(entryTime);
   const exit = new Date(exitTime);
@@ -30,21 +28,16 @@ function calculateDuration(entryTime, exitTime) {
   };
 }
 
-/**
- * Calculate parking charges
- */
+
 function calculateCharges(vehicleType, duration) {
   const ratePerHour = PARKING_RATES[vehicleType];
   
-  // Calculate amount based on total minutes (hourly rate)
-  // Minimum charge: 1 hour
+  
   const chargeableHours = Math.max(1, Math.ceil(duration.totalMinutes / 60));
   const amount = ratePerHour * chargeableHours;
   
-  // Calculate tax
   const tax = amount * TAX_RATE;
   
-  // Total amount
   const totalAmount = amount + tax;
   
   return {
@@ -55,12 +48,9 @@ function calculateCharges(vehicleType, duration) {
   };
 }
 
-/**
- * Generate bill for a ticket
- */
+
 async function generateBill(ticketId) {
   try {
-    // Get ticket details
     const ticket = await TicketModel.findOne({ id: ticketId });
     
     if (!ticket) {
@@ -75,7 +65,6 @@ async function generateBill(ticketId) {
     const duration = calculateDuration(ticket.timestamp, exitTime);
     const charges = calculateCharges(ticket.vehicleType, duration);
     
-    // Create bill
     const bill = new BillingModel({
       billId: `BILL-${uuidv4().substring(0, 8).toUpperCase()}`,
       ticketId: ticket.id,
@@ -105,9 +94,7 @@ async function generateBill(ticketId) {
   }
 }
 
-/**
- * Process payment for a bill
- */
+
 async function processPayment(billId, paymentMethod) {
   try {
     const bill = await BillingModel.findOne({ billId });
@@ -120,7 +107,7 @@ async function processPayment(billId, paymentMethod) {
       throw new Error('Bill already paid');
     }
     
-    // Update payment status
+
     bill.paymentStatus = 'paid';
     bill.paymentMethod = paymentMethod;
     bill.paidAt = new Date();
@@ -137,9 +124,6 @@ async function processPayment(billId, paymentMethod) {
   }
 }
 
-/**
- * Get bill by ticket ID
- */
 async function getBillByTicket(ticketId) {
   try {
     const bill = await BillingModel.findOne({ ticketId }).sort({ createdAt: -1 });
@@ -150,9 +134,6 @@ async function getBillByTicket(ticketId) {
   }
 }
 
-/**
- * Get all bills (with filters)
- */
 async function getAllBills(filters = {}) {
   try {
     const {
@@ -200,9 +181,6 @@ async function getAllBills(filters = {}) {
   }
 }
 
-/**
- * Get revenue statistics
- */
 async function getRevenueStats(startDate, endDate) {
   try {
     const matchStage = {
@@ -234,7 +212,7 @@ async function getRevenueStats(startDate, endDate) {
       }
     ]);
     
-    // Group by vehicle type
+
     const vehicleTypeStats = await BillingModel.aggregate([
       { $match: matchStage },
       {

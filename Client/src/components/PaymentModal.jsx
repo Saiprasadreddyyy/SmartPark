@@ -106,7 +106,6 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
   return (
     <div className="payment-overlay">
       <div className="payment-modal">
-        {/* Header */}
         <div className="payment-header">
           <div className="header-content">
             <Receipt size={28} />
@@ -117,9 +116,7 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
           </button>
         </div>
 
-        {/* Bill Details */}
         <div className="payment-body">
-          {/* Vehicle Info */}
           <div className="info-section">
             <div className="info-card">
               <div className="info-header">
@@ -145,7 +142,6 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
             </div>
           </div>
 
-          {/* Time Details */}
           <div className="time-section">
             <div className="time-card">
               <Clock size={20} />
@@ -166,7 +162,6 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
             </div>
           </div>
 
-          {/* Bill Breakdown */}
           <div className="billing-section">
             <h3 className="section-title">Billing Details</h3>
             <div className="billing-breakdown">
@@ -189,7 +184,6 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
             </div>
           </div>
 
-          {/* Payment Methods */}
           <div className="payment-methods-section">
             <h3 className="section-title">Select Payment Method</h3>
             <div className="payment-methods">
@@ -210,7 +204,6 @@ const PaymentModal = ({ bill, onClose, onPaymentSuccess }) => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="payment-footer">
           <button className="cancel-btn" onClick={onClose}>
             Cancel

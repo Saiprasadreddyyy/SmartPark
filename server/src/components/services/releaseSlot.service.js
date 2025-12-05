@@ -4,7 +4,7 @@ import { addSlotToAvailability } from './redisAvailability.service.js';
 import { generateBill } from './billing.service.js';
 
 async function releaseSlot(ticketId) {
-  // Validate ticket exists
+
   const ticket = await TicketModel.findOne({ id: ticketId, status: 'active' });
   if (!ticket) {
     throw new Error(`Ticket ${ticketId} not found or already completed`);
@@ -17,20 +17,16 @@ async function releaseSlot(ticketId) {
     throw new Error(`Slot ${slotId} not found`);
   }
 
-  // Generate bill BEFORE releasing slot
   const billingResult = await generateBill(ticketId);
 
-  // Update ticket status
   ticket.status = 'completed';
   ticket.exitTime = new Date();
   await ticket.save();
   
-  // Release slot
   slot.occupied = false;
   slot.currentTicket = null;
   await slot.save();
   
-  // Add slot back to Redis availability
   await addSlotToAvailability(slotId);
 
   return {

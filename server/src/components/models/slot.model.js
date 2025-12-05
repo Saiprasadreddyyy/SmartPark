@@ -32,7 +32,7 @@ const slotSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for faster queries
+
 slotSchema.index({ occupied: 1, type: 1 });
 slotSchema.index({ floor: 1 });
 

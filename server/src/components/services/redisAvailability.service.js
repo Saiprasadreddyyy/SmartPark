@@ -2,16 +2,14 @@ import redis from '../../config/redis.js';
 import SlotModel from '../models/slot.model.js';
 import DistanceModel from '../models/distance.model.js';
 
-/**
- * Get Redis key for availability sorted set
- */
+
+
+ 
 function getAvailabilityKey(gateId, vehicleType) {
   return `available:${gateId}:${vehicleType}`;
 }
 
-/**
- * Populate Redis with all available slots from MongoDB
- */
+
 async function populateRedisAvailability() {
   console.log('🔄 Populating Redis availability from MongoDB...');
   
@@ -19,7 +17,7 @@ async function populateRedisAvailability() {
   const vehicleTypes = ['car', 'motorbike', 'large'];
   
   try {
-    // Clear existing keys
+
     const pipeline = redis.pipeline();
     gates.forEach(gateId => {
       vehicleTypes.forEach(vehicleType => {
@@ -29,16 +27,13 @@ async function populateRedisAvailability() {
     });
     await pipeline.exec();
     
-    // Get all available slots from MongoDB
     const allSlots = await SlotModel.find({ occupied: false });
     const addPipeline = redis.pipeline();
     
-    // For each slot, add to Redis sorted sets
     for (const slot of allSlots) {
       for (const gateId of gates) {
         const key = getAvailabilityKey(gateId, slot.type);
         
-        // Get distance from MongoDB
         const distanceDoc = await DistanceModel.findOne({ slotId: slot.id, gateId });
         if (distanceDoc) {
           addPipeline.zadd(key, distanceDoc.distance, slot.id);
@@ -54,9 +49,7 @@ async function populateRedisAvailability() {
   }
 }
 
-/**
- * Get nearest available slot for a gate and vehicle type
- */
+
 async function getNearestSlot(gateId, vehicleType) {
   const key = getAvailabilityKey(gateId, vehicleType);
   const result = await redis.zpopmin(key);
@@ -71,9 +64,7 @@ async function getNearestSlot(gateId, vehicleType) {
   return { slotId, distance };
 }
 
-/**
- * Remove slot from all availability sets
- */
+
 async function removeSlotFromAvailability(slotId) {
   const slot = await SlotModel.findOne({ id: slotId });
   if (!slot) return;
@@ -89,9 +80,6 @@ async function removeSlotFromAvailability(slotId) {
   await pipeline.exec();
 }
 
-/**
- * Add slot back to availability sets
- */
 async function addSlotToAvailability(slotId) {
   const slot = await SlotModel.findOne({ id: slotId });
   if (!slot || slot.occupied) return;
@@ -102,7 +90,7 @@ async function addSlotToAvailability(slotId) {
   for (const gateId of gates) {
     const key = getAvailabilityKey(gateId, slot.type);
     
-    // Get distance from MongoDB
+
     const distanceDoc = await DistanceModel.findOne({ slotId, gateId });
     if (distanceDoc) {
       pipeline.zadd(key, distanceDoc.distance, slotId);
@@ -112,9 +100,6 @@ async function addSlotToAvailability(slotId) {
   await pipeline.exec();
 }
 
-/**
- * Get available slot count for a gate and vehicle type
- */
 async function getAvailableCount(gateId, vehicleType) {
   const key = getAvailabilityKey(gateId, vehicleType);
   return await redis.zcard(key);

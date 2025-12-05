@@ -1,13 +1,13 @@
-// src/ParkingLotSystem.tsx
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Car, Bike, Truck } from "lucide-react";
 import PaymentModal from "./components/PaymentModal";
 
-// Backend URL
+
 const API_BASE = "http://localhost:5050/api/parking";
 
-// Type definitions
+
 interface Slot {
   id: string;
   type: "car" | "motorbike" | "large";
@@ -45,16 +45,14 @@ const ParkingLotSystem: React.FC = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // Billing states
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentBill, setCurrentBill] = useState<any>(null);
 
-  // Fetch slots and vehicles on load
   useEffect(() => {
     fetchSlots();
     fetchParkedVehicles();
     
-    // Refresh data every 2 seconds
     const interval = setInterval(() => {
       fetchSlots();
       fetchParkedVehicles();
@@ -63,7 +61,6 @@ const ParkingLotSystem: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  /** Fetch all slots */
   const fetchSlots = async () => {
     try {
       const { data } = await axios.get(`${API_BASE}/slots`);
@@ -80,14 +77,12 @@ const ParkingLotSystem: React.FC = () => {
     }
   };
 
-  /** Fetch all parked vehicles */
   const fetchParkedVehicles = async () => {
     try {
       const { data } = await axios.get(`${API_BASE}/vehicles`);
       console.log("✅ Vehicles response:", data);
       
       if (data.success && data.data) {
-        // Map backend tickets to frontend vehicles
         const vehicles = data.data.map((ticket: any) => ({
           id: ticket.id,
           slotId: ticket.slotId,
@@ -104,7 +99,7 @@ const ParkingLotSystem: React.FC = () => {
     }
   };
 
-  /** Park a vehicle */
+
   const handleParkVehicle = async () => {
     if (!formData.vehicleNumber || !formData.owner) {
       setMessage("❌ Please fill all fields");
@@ -126,7 +121,6 @@ const ParkingLotSystem: React.FC = () => {
 
       const result = response.data.data;
       
-      // Backend returns: { slot, ticket, distance }
       const ticket = result.ticket;
       const slot = result.slot;
       const distance = result.distance;
@@ -134,7 +128,6 @@ const ParkingLotSystem: React.FC = () => {
       setMessage(`✅ ${response.data.message} - Distance: ${distance}m`);
       setFormData({ ...formData, vehicleNumber: "", owner: "" });
       
-      // Refresh data immediately
       await fetchSlots();
       await fetchParkedVehicles();
       
@@ -148,7 +141,6 @@ const ParkingLotSystem: React.FC = () => {
     setLoading(false);
   };
 
-  /** Exit a vehicle with billing */
   const handleExitVehicle = async (ticketId: string) => {
     try {
       console.log("🚪 Exit request for ticket:", ticketId);
@@ -161,13 +153,10 @@ const ParkingLotSystem: React.FC = () => {
         return;
       }
 
-      // Check if bill was generated
       if (response.data.data && response.data.data.bill) {
-        // Show payment modal with bill
         setCurrentBill(response.data.data.bill);
         setShowPaymentModal(true);
       } else {
-        // Fallback if no bill (shouldn't happen with new system)
         setMessage(`✅ ${response.data.message}`);
         await fetchSlots();
         await fetchParkedVehicles();
@@ -180,32 +169,26 @@ const ParkingLotSystem: React.FC = () => {
     }
   };
 
-  /** Handle payment completion */
   const handlePaymentSuccess = async (paidBill: any) => {
     setMessage(`✅ Payment successful! Vehicle ${paidBill.vehicleNumber} exited. Total: ₹${paidBill.totalAmount}`);
     setShowPaymentModal(false);
     setCurrentBill(null);
     
-    // Refresh data
     await fetchSlots();
     await fetchParkedVehicles();
   };
 
-  /** Handle payment modal close */
   const handlePaymentModalClose = async () => {
     setShowPaymentModal(false);
     setCurrentBill(null);
     
-    // Refresh data even if payment was cancelled
     await fetchSlots();
     await fetchParkedVehicles();
   };
 
-  /** Slot color based on occupancy */
   const getSlotColor = (slot: Slot) =>
     slot.occupied ? "bg-red-500" : "bg-green-500";
 
-  /** Vehicle icon based on type */
   const getVehicleIcon = (type: Slot["type"]) => {
     switch (type) {
       case "car":
@@ -219,13 +202,11 @@ const ParkingLotSystem: React.FC = () => {
     }
   };
 
-  /** Format gate name */
   const formatGateName = (gateId: string) => {
     if (!gateId) return "Unknown Gate";
     return gateId === "gateA" ? "Gate A" : "Gate B";
   };
 
-  /** Format date safely */
   const formatDate = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
@@ -250,7 +231,6 @@ const ParkingLotSystem: React.FC = () => {
           🚗 Smart Parking Lot
         </h1>
 
-        {/* Message */}
         {message && (
           <div className={`mb-4 p-3 rounded ${
             message.includes('❌') ? 'bg-red-600' : 
@@ -261,7 +241,6 @@ const ParkingLotSystem: React.FC = () => {
           </div>
         )}
 
-        {/* Park Vehicle Form */}
         <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
           <h2 className="text-2xl mb-4 text-white">Park a Vehicle</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,7 +292,6 @@ const ParkingLotSystem: React.FC = () => {
             {loading ? "Parking..." : "Park Vehicle"}
           </button>
           
-          {/* Pricing Info */}
           <div className="mt-4 p-3 bg-gray-700 rounded-lg border border-gray-600">
             <h3 className="text-sm font-semibold text-green-400 mb-2">💰 Parking Rates (per hour):</h3>
             <div className="grid grid-cols-3 gap-3 text-sm">
@@ -331,7 +309,6 @@ const ParkingLotSystem: React.FC = () => {
           </div>
         </div>
 
-        {/* Parked Vehicles */}
         <div className="bg-gray-800 rounded-2xl p-6 mb-8 border border-gray-700">
           <h2 className="text-2xl mb-4 text-white">
             Parked Vehicles ({parkedVehicles.length})
@@ -372,7 +349,6 @@ const ParkingLotSystem: React.FC = () => {
           )}
         </div>
 
-        {/* Parking Slot Status */}
         <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
           <h2 className="text-2xl mb-4 text-white">Parking Slots ({slots.length})</h2>
           {slots.length === 0 ? (
@@ -381,7 +357,6 @@ const ParkingLotSystem: React.FC = () => {
             </p>
           ) : (
             <>
-              {/* Floor 1 */}
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-blue-400 mb-3">Floor 1</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -404,7 +379,6 @@ const ParkingLotSystem: React.FC = () => {
                 </div>
               </div>
 
-              {/* Floor 2 */}
               <div>
                 <h3 className="text-xl font-semibold text-purple-400 mb-3">Floor 2</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -431,7 +405,6 @@ const ParkingLotSystem: React.FC = () => {
         </div>
       </div>
 
-      {/* Payment Modal */}
       {showPaymentModal && currentBill && (
         <PaymentModal
           bill={currentBill}

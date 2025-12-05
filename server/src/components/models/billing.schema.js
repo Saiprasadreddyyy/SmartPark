@@ -77,7 +77,7 @@ const billingSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for fast queries
+
 billingSchema.index({ paymentStatus: 1 });
 billingSchema.index({ vehicleNumber: 1 });
 billingSchema.index({ createdAt: -1 });

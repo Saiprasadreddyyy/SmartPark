@@ -3,13 +3,13 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://saiprasad45_db:Spr1414@cluster0.9vk9cu7.mongodb.net/ParkingLot', {
-      // These options are no longer needed in Mongoose 6+
+
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.name}`);
     
-    // Handle connection events
+
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);
     });

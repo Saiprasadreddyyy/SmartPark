@@ -19,7 +19,7 @@ const distanceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index for fast lookups
+
 distanceSchema.index({ slotId: 1, gateId: 1 }, { unique: true });
 
 const DistanceModel = mongoose.model('Distance', distanceSchema);
