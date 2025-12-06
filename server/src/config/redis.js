@@ -6,27 +6,62 @@ dotenv.config();
 let redis;
 let isRedisAvailable = false;
 
-// Use REDIS_TOKEN first (has full connection string), fallback to REDIS_URL
-const redisConnection = process.env.REDIS_TOKEN || process.env.REDIS_URL;
+// Clean and validate Redis connection string
+function getRedisConnection() {
+  let connection = process.env.REDIS_TOKEN || process.env.REDIS_URL;
+  
+  if (!connection) {
+    return null;
+  }
+  
+  // Remove any whitespace and URL-encoded characters
+  connection = connection.trim();
+  
+  // Remove any command flags that might have been accidentally copied
+  connection = connection.replace(/\s+--tls.*$/gi, '').trim();
+  connection = connection.replace(/\s+-u\s+/gi, '').trim();
+  
+  // Validate the URL format
+  if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
+    console.error('❌ Invalid Redis URL format. Must start with redis:// or rediss://');
+    return null;
+  }
+  
+  return connection;
+}
+
+const redisConnection = getRedisConnection();
 
 if (redisConnection) {
   console.log('🔗 Connecting to Redis...');
   
-  redis = new Redis(redisConnection, {
+  // Determine if we need TLS based on URL scheme
+  const useTLS = redisConnection.startsWith('rediss://');
+  
+  const redisConfig = {
     connectTimeout: 10000,
     maxRetriesPerRequest: 3,
-    enableOfflineQueue: false, // Fail fast if Redis is down
+    enableOfflineQueue: false,
     retryStrategy: (times) => {
       if (times > 3) {
         console.error('❌ Redis max retries reached');
         isRedisAvailable = false;
-        return null; // Stop retrying
+        return null;
       }
       return Math.min(times * 200, 2000);
     },
-    lazyConnect: false,
-    family: 4, // Force IPv4
-  });
+    lazyConnect: true, // Changed to true - connect manually after setup
+    family: 4,
+  };
+  
+  // Add TLS config only if using rediss://
+  if (useTLS) {
+    redisConfig.tls = {
+      rejectUnauthorized: false // Upstash requires this
+    };
+  }
+  
+  redis = new Redis(redisConnection, redisConfig);
 
   redis.on("connect", () => {
     console.log("✅ Redis connected successfully");
@@ -45,7 +80,9 @@ if (redisConnection) {
     if (err.message.includes('NOAUTH')) {
       console.error('🔑 Redis authentication failed!');
       console.error('💡 Check your REDIS_TOKEN or REDIS_URL in environment variables');
-      console.error('💡 Expected format: redis://default:PASSWORD@host:port');
+    } else if (err.message.includes('ENOENT')) {
+      console.error('🔧 Invalid Redis connection string detected');
+      console.error('💡 Check for extra characters or spaces in your Redis URL');
     }
   });
 
@@ -57,6 +94,13 @@ if (redisConnection) {
   redis.on("reconnecting", () => {
     console.log("🔄 Redis reconnecting...");
   });
+  
+  // Attempt connection
+  redis.connect().catch(err => {
+    console.error('❌ Failed to connect to Redis:', err.message);
+    console.log('⚠️ Continuing without Redis - using MongoDB fallback');
+    isRedisAvailable = false;
+  });
 } else {
   console.warn('⚠️ No Redis configuration found (REDIS_TOKEN or REDIS_URL)');
   console.warn('⚠️ System will work with MongoDB only (slower performance)');
@@ -67,12 +111,13 @@ if (redisConnection) {
 
 // Mock Redis for fallback
 function createMockRedis() {
+  isRedisAvailable = false;
   return {
     get: async () => null,
     set: async () => 'OK',
     del: async () => 1,
     zadd: async () => 1,
-    zrem: async () => 1,
+    zrem: async () => {},
     zpopmin: async () => [],
     zcard: async () => 0,
     pipeline: () => ({
@@ -84,6 +129,8 @@ function createMockRedis() {
     ping: async () => 'PONG',
     on: () => {},
     quit: async () => {},
+    connect: async () => {},
+    status: 'mock'
   };
 }
 
@@ -92,11 +139,30 @@ export function isRedisConnected() {
   return isRedisAvailable && redis.status === 'ready';
 }
 
+// Safe ping that won't throw if Redis is unavailable
+export async function pingRedis() {
+  if (!redis || redis.status === 'mock') {
+    return false;
+  }
+  
+  try {
+    await redis.ping();
+    return true;
+  } catch (error) {
+    console.error('❌ Redis ping failed:', error.message);
+    return false;
+  }
+}
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  if (redis && redis.quit) {
+  if (redis && redis.quit && redis.status !== 'mock') {
     console.log('🔄 Closing Redis connection...');
-    await redis.quit();
+    try {
+      await redis.quit();
+    } catch (err) {
+      console.error('Error closing Redis:', err.message);
+    }
   }
 });
 
