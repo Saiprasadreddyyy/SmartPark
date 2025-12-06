@@ -1,10 +1,19 @@
-import Redis from 'ioredis';
-import dotenv from 'dotenv';
+// server/config/redis.js
+import Redis from "ioredis";
+import dotenv from "dotenv";
 dotenv.config();
 
-const redis = new Redis(process.env.REDIS_URL); // <- use REDIS_URL instead of host/port/password
+const redis = new Redis(process.env.REDIS_URL, {
+  tls: {},              // required for rediss:// SSL
+  connectTimeout: 10000
+});
 
-redis.on('connect', () => console.log('✅ Redis connected successfully'));
-redis.on('error', (err) => console.error('❌ Redis connection error:', err));
+redis.on("connect", () => {
+  console.log("✅ Redis connected successfully");
+});
+
+redis.on("error", (err) => {
+  console.error("❌ Redis connection error:", err);
+});
 
 export default redis;
