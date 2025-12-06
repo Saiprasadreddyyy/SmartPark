@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config(); // <-- LOAD .env FIRST
+dotenv.config();
 
 import http from 'http';
 import app from './app.js';

@@ -7,7 +7,6 @@ import PaymentModal from "./components/PaymentModal";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
-
 interface Slot {
   id: string;
   type: "car" | "motorbike" | "large";
