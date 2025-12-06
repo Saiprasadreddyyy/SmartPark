@@ -5,7 +5,7 @@ import { Car, Bike, Truck } from "lucide-react";
 import PaymentModal from "./components/PaymentModal";
 
 
-const API_BASE = "import.meta.env.VITE_API_BASE;";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 
 interface Slot {
