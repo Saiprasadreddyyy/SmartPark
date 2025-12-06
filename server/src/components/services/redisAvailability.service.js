@@ -2,14 +2,9 @@ import redis from '../../config/redis.js';
 import SlotModel from '../models/slot.model.js';
 import DistanceModel from '../models/distance.model.js';
 
-
-
- 
 function getAvailabilityKey(gateId, vehicleType) {
   return `available:${gateId}:${vehicleType}`;
 }
-
-
 async function populateRedisAvailability() {
   console.log('🔄 Populating Redis availability from MongoDB...');
   

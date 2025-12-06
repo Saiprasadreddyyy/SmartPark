@@ -5,7 +5,7 @@ import { Car, Bike, Truck } from "lucide-react";
 import PaymentModal from "./components/PaymentModal";
 
 
-const API_BASE = "http://localhost:5050/api/parking";
+const API_BASE = "import.meta.env.VITE_API_BASE;";
 
 
 interface Slot {
