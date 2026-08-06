@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 
-import Hero from "../components/dashboard/Hero";
-import Stats from "../components/dashboard/Stats";
+
 import ParkVehicleCard from "../components/dashboard/ParkVehicleCard";
-import ExitVehicleCard from "../components/dashboard/ExitVehicleCard";
-import ParkingGrid from "../components/dashboard/ParkingGrid";
-import ActiveVehicles from "../components/dashboard/ActiveVehicles";
+import ExitVehicleCard from "../components/dashboard/ExitVehiclecard";
+
 
 import api from "../api/axios";
 import socket from "../socket/socket";
