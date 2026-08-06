@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import BillingModel from '../models/billing.schema.js';
 import TicketModel from '../models/ticket.model.js';
+import { releaseSlot } from './releaseSlot.service.js';
 
 
 const PARKING_RATES = {
@@ -94,34 +95,53 @@ async function generateBill(ticketId) {
   }
 }
 
-
 async function processPayment(billId, paymentMethod) {
-  try {
-    const bill = await BillingModel.findOne({ billId });
-    
-    if (!bill) {
-      throw new Error(`Bill ${billId} not found`);
-    }
-    
-    if (bill.paymentStatus === 'paid') {
-      throw new Error('Bill already paid');
-    }
-    
 
-    bill.paymentStatus = 'paid';
+  try {
+
+    const bill = await BillingModel.findOne({
+      billId
+    });
+
+    if (!bill) {
+
+      throw new Error(
+        `Bill ${billId} not found`
+      );
+    }
+    if (bill.paymentStatus === "paid") {
+      throw new Error(
+        "Bill already paid"
+      );
+    }
+
+    bill.paymentStatus = "paid";
     bill.paymentMethod = paymentMethod;
     bill.paidAt = new Date();
-    
+
     await bill.save();
-    
+    const releaseResult =
+      await releaseSlot(
+        bill.ticketId
+      );
+
     return {
+
       bill: bill.toObject(),
-      message: 'Payment successful'
+      release: releaseResult,
+      message:
+      "Payment successful and vehicle exited"
+
     };
-  } catch (error) {
-    console.error('Error processing payment:', error);
+
+  } catch(error) {
+    console.error(
+      "Error processing payment:",
+      error
+    );
     throw error;
   }
+
 }
 
 async function getBillByTicket(ticketId) {

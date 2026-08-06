@@ -7,6 +7,11 @@ const ticketSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+},
   slotId: {
     type: String,
     required: true,
@@ -48,7 +53,6 @@ const ticketSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes
 ticketSchema.index({ status: 1 });
 ticketSchema.index({ slotId: 1 });
 ticketSchema.index({ vehicleNumber: 1 });

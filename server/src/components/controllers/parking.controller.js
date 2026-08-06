@@ -4,68 +4,91 @@ import { allocateSlot } from '../services/allocateSlot.service.js';
 import { releaseSlot } from '../services/releaseSlot.service.js';
 import { getAvailableCount } from '../services/redisAvailability.service.js';
 import { emitSlotAllocated, emitSlotReleased, emitStatusUpdate } from '../sockets/parking.socket.js';
+import UserModel from "../models/user.model.js";
 
-
-async function parkVehicle(req, res) {
+export async function parkVehicle(req, res) {
   try {
-    const { gateId, vehicleType, vehicleNumber, owner } = req.body;
+    const { gateId } = req.body;
+
+    const user = await UserModel.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
 
     const result = await allocateSlot({
       gateId,
-      vehicleType,
-      vehicleNumber,
-      owner
+      owner: user.name,
+      vehicleNumber: user.vehicleNumber,
+      vehicleType: user.vehicleType,
+      userId: user._id
     });
 
     emitSlotAllocated(result);
-    
+
     const stats = await getStats();
     emitStatusUpdate(stats);
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: `Vehicle parked successfully at ${result.slot.id}`,
       data: result
     });
-  } catch (error) {
-    console.error('Park vehicle error:', error);
-    res.status(400).json({
+
+  } catch (err) {
+
+    return res.status(400).json({
       success: false,
-      error: error.message
+      message: err.message
     });
+
   }
 }
 
-
-async function exitVehicle(req, res) {
+export async function exitVehicle(req, res) {
   try {
     const { ticketId } = req.body;
 
-    const result = await releaseSlot(ticketId);
+if (req.user.role === "admin") {
+    ticket = await TicketModel.findOne({
+        id: ticketId,
+        status: "active",
+    });
+} else {
+    ticket = await TicketModel.findOne({
+        id: ticketId,
+        userId: req.user.id,
+        status: "active",
+    });
+}
 
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found"
+      });
+    }
 
-    emitSlotReleased(result);
-    
-
-    const stats = await getStats();
-    emitStatusUpdate(stats);
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: result.message,
       data: result
     });
+
   } catch (error) {
-    console.error('Exit vehicle error:', error);
-    res.status(400).json({
+    console.error("Exit vehicle error:", error);
+
+    return res.status(400).json({
       success: false,
       error: error.message
     });
   }
 }
 
-
-async function getParkedVehicles(req, res) {
+export async function getParkedVehicles(req, res) {
   try {
     const tickets = await TicketModel.find({ status: 'active' }).sort({ timestamp: -1 });
     
@@ -83,8 +106,7 @@ async function getParkedVehicles(req, res) {
   }
 }
 
-
-async function getAllSlots(req, res) {
+export async function getAllSlots(req, res) {
   try {
     const slots = await SlotModel.find().sort({ floor: 1, id: 1 });
     
@@ -102,8 +124,7 @@ async function getAllSlots(req, res) {
   }
 }
 
-
-async function getStats() {
+export async function getStats() {
   try {
     const totalSlots = await SlotModel.countDocuments();
     const occupiedSlots = await SlotModel.countDocuments({ occupied: true });
@@ -136,8 +157,7 @@ async function getStats() {
   }
 }
 
-
-async function getStatsEndpoint(req, res) {
+export async function getStatsEndpoint(req, res) {
   try {
     const stats = await getStats();
     
@@ -154,15 +174,53 @@ async function getStatsEndpoint(req, res) {
   }
 }
 
-export {
-  parkVehicle,
-  exitVehicle,
-  getParkedVehicles,
-  getAllSlots,
-  getStatsEndpoint as getStats
-};
+export async function getParkingHistory(req, res) {
+  try {
 
+    const tickets = await TicketModel
+      .find({ userId: req.user.id })
+      .sort({ createdAt: -1 });
 
+    return res.status(200).json({
+      success: true,
+      count: tickets.length,
+      data: tickets
+    });
+
+  } catch (err) {
+
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+
+  }
+}
+
+export async function getCurrentTicket(req, res) {
+
+    const ticket = await TicketModel.findOne({
+
+        userId: req.user.id,
+        status: "active"
+
+    });
+
+   if (!ticket) {
+    return res.status(200).json({
+        success: true,
+        data: null
+    });
+}
+
+    return res.json({
+
+        success: true,
+        data: ticket
+
+    });
+
+}
 
 
 

@@ -1,4 +1,3 @@
-// server/config/redis.js
 import Redis from "ioredis";
 import dotenv from "dotenv";
 dotenv.config();
@@ -6,7 +5,6 @@ dotenv.config();
 let redis;
 let isRedisAvailable = false;
 
-// Clean and validate Redis connection string
 function getRedisConnection() {
   let connection = process.env.REDIS_TOKEN || process.env.REDIS_URL;
   
@@ -14,14 +12,11 @@ function getRedisConnection() {
     return null;
   }
   
-  // Remove any whitespace and URL-encoded characters
   connection = connection.trim();
   
-  // Remove any command flags that might have been accidentally copied
   connection = connection.replace(/\s+--tls.*$/gi, '').trim();
   connection = connection.replace(/\s+-u\s+/gi, '').trim();
   
-  // Validate the URL format
   if (!connection.startsWith('redis://') && !connection.startsWith('rediss://')) {
     console.error('❌ Invalid Redis URL format. Must start with redis:// or rediss://');
     return null;
@@ -35,7 +30,6 @@ const redisConnection = getRedisConnection();
 if (redisConnection) {
   console.log('🔗 Connecting to Redis...');
   
-  // Determine if we need TLS based on URL scheme
   const useTLS = redisConnection.startsWith('rediss://');
   
   const redisConfig = {
@@ -50,14 +44,14 @@ if (redisConnection) {
       }
       return Math.min(times * 200, 2000);
     },
-    lazyConnect: true, // Changed to true - connect manually after setup
+    lazyConnect: true, 
     family: 4,
   };
   
-  // Add TLS config only if using rediss://
+
   if (useTLS) {
     redisConfig.tls = {
-      rejectUnauthorized: false // Upstash requires this
+      rejectUnauthorized: false 
     };
   }
   
@@ -95,7 +89,6 @@ if (redisConnection) {
     console.log("🔄 Redis reconnecting...");
   });
   
-  // Attempt connection
   redis.connect().catch(err => {
     console.error('❌ Failed to connect to Redis:', err.message);
     console.log('⚠️ Continuing without Redis - using MongoDB fallback');
@@ -105,11 +98,9 @@ if (redisConnection) {
   console.warn('⚠️ No Redis configuration found (REDIS_TOKEN or REDIS_URL)');
   console.warn('⚠️ System will work with MongoDB only (slower performance)');
   
-  // Create mock Redis client
   redis = createMockRedis();
 }
 
-// Mock Redis for fallback
 function createMockRedis() {
   isRedisAvailable = false;
   return {
@@ -134,12 +125,10 @@ function createMockRedis() {
   };
 }
 
-// Helper function to check if Redis is available
 export function isRedisConnected() {
   return isRedisAvailable && redis.status === 'ready';
 }
 
-// Safe ping that won't throw if Redis is unavailable
 export async function pingRedis() {
   if (!redis || redis.status === 'mock') {
     return false;
@@ -154,7 +143,6 @@ export async function pingRedis() {
   }
 }
 
-// Graceful shutdown
 process.on('SIGTERM', async () => {
   if (redis && redis.quit && redis.status !== 'mock') {
     console.log('🔄 Closing Redis connection...');

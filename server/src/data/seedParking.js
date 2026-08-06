@@ -8,26 +8,12 @@ function calculateDistance(c1, c2) {
   return Math.sqrt(Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2));
 }
 
+import {
+  populateRedisAvailability as populateRedis
+} from "../components/services/redisAvailability.service.js";
+
 export async function populateRedisAvailability() {
-  try {
-    const slots = await SlotModel.find({});
-    console.log(`⏳ Sending Redis pipeline for ${slots.length} slots...`);
-
-    const pipeline = redis.pipeline();
-
-    for (const slot of slots) {
-      pipeline.set(
-        `slot:${slot.id}`,
-        slot.occupied ? "occupied" : "available"
-      );
-    }
-
-    await pipeline.exec();
-    console.log("✅ Redis availability populated using pipeline");
-  } catch (err) {
-    console.error("❌ Redis population error:", err);
-    throw err;
-  }
+  await populateRedis();
 }
 
 export async function seedParking() {

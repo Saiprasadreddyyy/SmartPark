@@ -2,8 +2,9 @@ import { v4 as uuidv4 } from 'uuid';
 import SlotModel from '../models/slot.model.js';
 import TicketModel from '../models/ticket.model.js';
 import { getNearestSlot, removeSlotFromAvailability } from './redisAvailability.service.js';
+import { emitSlotAllocated } from "../sockets/parking.socket.js";
 
-async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
+async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner ,userId}) {
 
   if (!gateId || !vehicleType || !vehicleNumber || !owner) {
     throw new Error('Missing required fields');
@@ -36,6 +37,7 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
   const ticketId = uuidv4();
   const ticket = new TicketModel({
     id: ticketId,
+    userId,
     slotId,
     vehicleNumber: vehicleNumber.toUpperCase(),
     owner,
@@ -55,6 +57,11 @@ async function allocateSlot({ gateId, vehicleType, vehicleNumber, owner }) {
   
 
   await removeSlotFromAvailability(slotId);
+  emitSlotAllocated({
+    slotId: slot.id,
+    vehicleType: slot.type,
+    gateId
+});
 
   return {
     slot: {

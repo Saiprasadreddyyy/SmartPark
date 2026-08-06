@@ -1,7 +1,11 @@
 import express from "express";
 import cors from "cors";
-import parkingRoutes from "./components/routes/parking.routes.js";
-import billingRoutes from "./components/routes/billing.routes.js";
+import { errorHandler } from "./components/middleware/error.middleware.js";
+import cookieParser from "cookie-parser";
+import Authrouter from "./components/routes/auth.routes.js";
+import AdminRouter from "./components/routes/admin.routes.js";
+import UserRouter from "./components/routes/user.routes.js";
+import BillingRouter from "./components/routes/billing.routes.js";
 
 const app = express();
 
@@ -22,22 +26,19 @@ app.use(cors({
   credentials: true
 }));
 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.use("/api/parking", parkingRoutes);
-app.use("/api/billing", billingRoutes);
+app.use("/api/auth", Authrouter);
+app.use("/api/user", UserRouter);
+app.use("/api/admin", AdminRouter);
+app.use("/api/billing", BillingRouter);
 
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    message: err.message
-  });
-});
+app.use(errorHandler);
 
 export default app;

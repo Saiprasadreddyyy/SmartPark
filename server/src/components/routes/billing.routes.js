@@ -1,5 +1,5 @@
 import express from 'express';
-const router = express.Router();
+const BillingRouter = express.Router();
 import {
   generateBillController,
   processPaymentController,
@@ -8,19 +8,17 @@ import {
   getRevenueStatsController
 } from '../controllers/billing.controller.js';
 
+import {authMiddleware} from "../middleware/auth.middleware.js";
+import { adminMiddleware } from '../middleware/admin.middleware.js';
 
-router.post('/generate', generateBillController);
+BillingRouter.post('/generate', authMiddleware ,generateBillController);
 
+BillingRouter.post('/payment', authMiddleware ,processPaymentController);
 
-router.post('/payment', processPaymentController);
+BillingRouter.get('/ticket/:ticketId', authMiddleware, getBillController);
 
+BillingRouter.get('/all',authMiddleware,adminMiddleware, getAllBillsController);
 
-router.get('/ticket/:ticketId', getBillController);
+BillingRouter.get('/revenue/stats', authMiddleware, adminMiddleware, getRevenueStatsController);
 
-
-router.get('/all', getAllBillsController);
-
-
-router.get('/revenue/stats', getRevenueStatsController);
-
-export default router;
+export default BillingRouter;
