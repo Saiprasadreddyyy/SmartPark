@@ -3,7 +3,7 @@ import {authMiddleware} from "../middleware/auth.middleware.js";
 import { signupSchema, loginSchema } from "../controllers/auth.validation.js";
 import { signupController, loginController, logoutController, profileController , refreshTokenController} from "../controllers/auth.controller.js";
 import { validate } from "../middleware/validation.middleware.js";
-import { authLimiter } from "../middleware/rateLimit.middleware.js";
+import { authLimiter } from "../middleware/ratelimit.middleware.js";
 
 const Authrouter = express.Router();
 
